@@ -1,42 +1,49 @@
 pipeline {
-  agent any
+    agent any
 
-  parameters {
-    string(name: 'GIT_BRANCH', defaultValue: 'main', description: 'Git branch to deploy')
-    choice(name: 'DEPLOY_TARGET', choices: ['all', 'frontend', 'backend'], description: 'What to deploy')
-    choice(name: 'ENV', choices: ['dev', 'prod'], description: 'Environment')
-  }
-
-  stages {
-
-    stage("Clone Repository") {
-      steps {
-        git branch: params.GIT_BRANCH,
-            url: 'https://github.com/YOUR_USERNAME/simple-mern-app.git'
-      }
+    parameters {
+        string(name: 'GIT_BRANCH', defaultValue: 'main', description: 'Git branch to deploy')
+        choice(name: 'DEPLOY_TARGET', choices: ['all', 'frontend', 'backend'], description: 'What to deploy')
     }
 
-    stage("Deploy") {
-      steps {
-        sh '''
-        echo "Deploying branch: ${GIT_BRANCH}"
-        echo "Target: ${DEPLOY_TARGET}"
-        echo "Environment: ${ENV}"
+    stages {
 
-        if [ "${DEPLOY_TARGET}" = "all" ]; then
-          docker-compose down
-          docker-compose up -d --build
+        stage('Checkout Code') {
+            steps {
+                echo "Cloning branch: ${params.GIT_BRANCH}"
+                git branch: params.GIT_BRANCH,
+                    url: 'https://github.com/mohitjangra876/simple-mern-app.git'
+            }
+        }
 
-        elif [ "${DEPLOY_TARGET}" = "frontend" ]; then
-          docker-compose build frontend
-          docker-compose up -d frontend nginx
+        stage('Build & Deploy') {
+            steps {
+                sh '''
+                echo "Deploy target: ${DEPLOY_TARGET}"
 
-        elif [ "${DEPLOY_TARGET}" = "backend" ]; then
-          docker-compose build backend
-          docker-compose up -d backend nginx
-        fi
-        '''
-      }
+                if [ "${DEPLOY_TARGET}" = "all" ]; then
+                  docker-compose down
+                  docker-compose up -d --build
+
+                elif [ "${DEPLOY_TARGET}" = "frontend" ]; then
+                  docker-compose build frontend
+                  docker-compose up -d frontend nginx
+
+                elif [ "${DEPLOY_TARGET}" = "backend" ]; then
+                  docker-compose build backend
+                  docker-compose up -d backend nginx
+                fi
+                '''
+            }
+        }
     }
-  }
+
+    post {
+        success {
+            echo "Deployment completed successfully"
+        }
+        failure {
+            echo "Deployment failed"
+        }
+    }
 }
