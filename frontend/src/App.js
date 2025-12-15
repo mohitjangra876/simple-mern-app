@@ -11,7 +11,7 @@ function App() {
 
   return (
     <div style={{ padding: "40px" }}>
-      <h1>Simple MERN App</h1>
+      <h1>Simple MERN App udated </h1>
       <p>{msg}</p>
     </div>
   );
